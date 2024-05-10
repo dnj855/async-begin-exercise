@@ -31,6 +31,25 @@ const addEntry = async (date, content) => {
   }
 };
 
+const deleteEntry = async (date) => {
+  const filePath = path.join(journalDir, `${date}.txt`);
+  try {
+    const existingContent = await fs.readFile(filePath, "utf-8");
+  } catch (error) {
+    console.log("Erreur, ce fichier n'existe pas.");
+    return;
+  }
+  const confirmation = prompt(
+    `Voulez-vous vraiment supprimer l'entrée ${date} ? (O/N) `
+  );
+  if ((await confirmation).toLowerCase() === "o") {
+    await fs.unlink(filePath);
+    console.log("L'entrée a bien été supprimée.");
+  } else {
+    console.log("L'entrée n'a pas été supprimée.");
+  }
+};
+
 const main = async () => {
   await ensureJournalDirExists();
   const args = process.argv.slice(2);
@@ -41,11 +60,15 @@ const main = async () => {
     case "add":
       await addEntry(args[1], args.slice(2).join(" "));
       break;
+    case "delete":
+      await deleteEntry(args[1]);
+      break;
     default:
       console.log(`
 Usage:
-- Pour lister les entrées : node journal.js list
-- Pour ajouter une entrée : node journal.js add <date> <content>
+- Pour lister les entrées : node script.js list
+- Pour ajouter une entrée : node script.js add <date> <content>
+- Pour supprimer une entrée : node script.js delete <date>
 `);
       break;
   }
