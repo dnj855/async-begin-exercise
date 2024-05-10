@@ -1,0 +1,19 @@
+{
+  "name": "setup-vscode",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon script.js",
+    "start": "node script.js"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
+    "eslint": "^8.46.0",
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "faker": "^6.6.6",
+    "prompt-sync": "^4.2.0"
+  }
+}
