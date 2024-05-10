@@ -1,38 +1,54 @@
-// Commence par importer les modules nécessaires
-// import fs from 'fs/promises';
-// import path from 'path';
+import fs from "fs/promises";
+import path from "path";
+import { prompt } from "./helper.js";
 
-// Importe ce fichier pour utiliser la fonction prompt
-// import { prompt } from './helper.js';
+const journalDir = path.join(process.cwd(), "journal");
 
-// 🦁 Déclare `journalDir` en utilisant `path.join`
-// 💡 `process.cwd()` retourne le chemin du dossier courant
-// 💡 Tu veux joindre le chemin du dossier courant avec journal
+const ensureJournalDirExists = async () => {
+  try {
+    await fs.access(journalDir);
+  } catch (error) {
+    await fs.mkdir(journalDir);
+  }
+};
 
-// 🦁 Crée une fonction ensureJournalDirExists qui essaie d'accéder au dossier journal
-// 💡 Utilise `fs.access` pour vérifier si le dossier existe
-// 🦁 Si ce n'est pas le cas, il crée le dossier (utilise try/catch pour gérer l'erreur)
+const listEntries = async () => {
+  const files = await fs.readdir(journalDir);
+  console.log(files.map((file) => path.basename(file, ".txt")).join("\n"));
+};
 
-// 🦁 Crée une fonction listEntries qui liste les fichiers du dossier journal
-// 💡 Utilise `fs.readdir` pour lister les fichiers
+const addEntry = async (date, content) => {
+  if (date === "today") {
+    date = new Date().toISOString().slice(0, 10);
+  }
+  const filePath = path.join(journalDir, `${date}.txt`);
+  try {
+    const existingContent = await fs.readFile(filePath, "utf-8");
+    content = `${existingContent}\n${content}`;
+    await fs.writeFile(filePath, content, "utf-8");
+  } catch (error) {
+    await fs.writeFile(filePath, content, "utf-8");
+  }
+};
 
-// 🦁 Crée une fonction addEntry qui prend en paramètre une date et un contenu
-// 👉 Si la date est 'today', on utilise la date du jour
-// 🦁 Utilise `path.join` pour créer le chemin du fichier grâce à la date
-// 🦁 Récupère le contenu du fichier s'il existe et remplace le paramètre contenu par le contenu existant + le nouveau
-// 💡 Utilise try/catch pour gérer l'erreur si le fichier n'existe pas
-// 🦁 Utilise `fs.writeFile` pour écrire le contenu dans le fichier
-
-// 🦁 Crée une fonction main qui appelle `ensureJournalDirExists`
-// 🦁 Récupère les arguments de la ligne de commande avec `process.argv.slice(2)`
-// 🦁 Utilise un switch pour appeler la bonne fonction en fonction du premier argument
-// 🦁 En fonction du paramètre, appelle addEntry ou listEntries
-
-// 💡 Si aucun cas ne correspond, tu peux afficher ce log :
-/*
-console.log(`
+const main = async () => {
+  await ensureJournalDirExists();
+  const args = process.argv.slice(2);
+  switch (args[0]) {
+    case "list":
+      await listEntries();
+      break;
+    case "add":
+      await addEntry(args[1], args.slice(2).join(" "));
+      break;
+    default:
+      console.log(`
 Usage:
 - Pour lister les entrées : node journal.js list
 - Pour ajouter une entrée : node journal.js add <date> <content>
 `);
-*/
+      break;
+  }
+};
+
+main();
