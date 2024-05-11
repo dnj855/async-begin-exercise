@@ -50,6 +50,27 @@ const deleteEntry = async (date) => {
   }
 };
 
+const searchEntry = async (content) => {
+  if (!content) {
+    content = await prompt("Merci de taper le contenu que vous recherchez : ");
+  }
+  const files = await fs.readdir(journalDir);
+  const searchPromises = files.map((file) => {
+    const filePath = path.join(journalDir, file);
+    return fs.readFile(filePath, "utf-8").then((fileContent) => {
+      if (fileContent.includes(content)) {
+        return path.basename(file);
+      }
+      return null;
+    });
+  });
+  const results = await Promise.all(searchPromises);
+  console.log(
+    `Le terme "${content}" se trouve dans les fichiers suivants:\n- ` +
+      results.filter((result) => result !== null).join("\n- ")
+  );
+};
+
 const main = async () => {
   await ensureJournalDirExists();
   const args = process.argv.slice(2);
@@ -63,12 +84,16 @@ const main = async () => {
     case "delete":
       await deleteEntry(args[1]);
       break;
+    case "search":
+      await searchEntry(args[1]);
+      break;
     default:
       console.log(`
 Usage:
 - Pour lister les entrées : node script.js list
 - Pour ajouter une entrée : node script.js add <date> <content>
 - Pour supprimer une entrée : node script.js delete <date>
+- Pour rechercher une entrée : node script.js search <content>
 `);
       break;
   }
