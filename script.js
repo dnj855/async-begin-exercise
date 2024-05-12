@@ -14,7 +14,10 @@ const ensureJournalDirExists = async () => {
 
 const listEntries = async () => {
   const files = await fs.readdir(journalDir);
-  console.log(files.map((file) => path.basename(file, ".txt")).join("\n"));
+  console.log(
+    "Voici la liste des fichiers :\n- " +
+      files.map((file) => path.basename(file)).join("\n- ")
+  );
 };
 
 const addEntry = async (date, content) => {
@@ -65,10 +68,28 @@ const searchEntry = async (content) => {
     });
   });
   const results = await Promise.all(searchPromises);
-  console.log(
-    `Le terme "${content}" se trouve dans les fichiers suivants:\n- ` +
-      results.filter((result) => result !== null).join("\n- ")
-  );
+  const filteredResults = results.filter((result) => result !== null);
+  if (filteredResults.length === 0) {
+    console.log(`Le terme "${content}" n'a pas été trouvé.`);
+  } else {
+    console.log(
+      `Le terme "${content}" se trouve dans les fichiers suivants:\n- ` +
+        filteredResults.join("\n- ")
+    );
+  }
+};
+
+const openEntry = async (data) => {
+  if (!data) {
+    data = await prompt("Quelle date souhaitez-vous ouvrir ? ");
+  }
+  const filePath = path.join(journalDir, `${data}.txt`);
+  try {
+    const content = await fs.readFile(filePath, "utf-8");
+    console.log("\n" + content);
+  } catch (error) {
+    console.log("Erreur, ce fichier n'existe pas.");
+  }
 };
 
 const main = async () => {
@@ -87,6 +108,9 @@ const main = async () => {
     case "search":
       await searchEntry(args[1]);
       break;
+    case "open":
+      await openEntry(args[1]);
+      break;
     default:
       console.log(`
 Usage:
@@ -94,6 +118,7 @@ Usage:
 - Pour ajouter une entrée : node script.js add <date> <content>
 - Pour supprimer une entrée : node script.js delete <date>
 - Pour rechercher une entrée : node script.js search <content>
+- Pour ouvrir une entrée : node script.js open <date>
 `);
       break;
   }
